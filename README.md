@@ -11,6 +11,7 @@
 | `refactor: fix audit findings` | исправленный сервис в `app/` |
 | `test: add pytest and endpoint checker` | тесты и проверка живого сервера |
 | `docs: README, requirements, OpenAPI` | документация и зависимости |
+| `fix: keep /slow non-blocking ...` | исправление, найденное при проверке в Docker |
 | `build: Dockerfile and compose` | контейнеризация |
 | `ci: GitHub Actions` | автоматическая проверка: ruff, pytest, docker build |
 
