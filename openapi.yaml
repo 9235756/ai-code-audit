@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: AI Code Audit — User Service
+  version: 1.0.0
+  description: |
+    Исправленная после аудита версия учебного Flask-сервиса пользователей.
+    Все ошибки возвращаются в формате JSON.
+servers:
+  - url: http://localhost:8080
+    description: Локальный запуск и Docker
+tags:
+  - name: users
+  - name: activity
+  - name: system
+
+paths:
+  /adduser:
+    post:
+      tags: [users]
+      operationId: addUser
+      summary: Создать пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddUserRequest"
+            examples:
+              simple:
+                value: { name: alice }
+              withTags:
+                value: { name: bob, tags: [dev, qa] }
+      responses:
+        "201":
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddUserResponse"
+              example: { status: created, id: 1, name: alice }
+        "400":
+          description: Тело не JSON-объект, имя пустое, не строка или длиннее 100 символов, теги не список строк
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example: { error: validation_error, detail: name must not be empty }
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+
+  /user/{uid}:
+    get:
+      tags: [users]
+      operationId: getUser
+      summary: Получить пользователя по id
+      parameters:
+        - $ref: "#/components/parameters/Uid"
+      responses:
+        "200":
+          description: Пользователь найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example: { id: 1, name: alice, tags: [] }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /activate/{uid}:
+    get:
+      tags: [activity]
+      operationId: activateUser
+      summary: Отметить пользователя активным
+      description: Возвращает последние 5 активированных id, самые старые вытесняются первыми.
+      parameters:
+        - $ref: "#/components/parameters/Uid"
+      responses:
+        "200":
+          description: Текущий список активных пользователей
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivateResponse"
+              example: { active: [3, 4, 5, 6, 7] }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /slow:
+    get:
+      tags: [system]
+      operationId: scheduleSlowTask
+      summary: Запустить тяжёлую задачу в фоне
+      description: Задача ставится в фоновый пул потоков, ответ приходит сразу.
+      responses:
+        "202":
+          description: Задача поставлена в очередь
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledResponse"
+              example: { status: scheduled }
+
+  /wrong:
+    get:
+      tags: [system]
+      operationId: wrong
+      summary: Демонстрация обработки ошибки
+      responses:
+        "500":
+          description: Ошибка перехвачена и возвращена в JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WrongResponse"
+              example: { msg: error, detail: division by zero }
+
+  /health:
+    get:
+      tags: [system]
+      operationId: health
+      summary: Проверка работоспособности (включая доступ к БД)
+      responses:
+        "200":
+          description: Сервис работает
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example: { status: ok }
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  parameters:
+    Uid:
+      name: uid
+      in: path
+      required: true
+      description: Целочисленный id. Нечисловое значение даёт 404.
+      schema:
+        type: integer
+        minimum: 0
+
+  responses:
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example: { error: not_found }
+    MethodNotAllowed:
+      description: Метод не поддерживается
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example: { error: method_not_allowed }
+    InternalError:
+      description: Непредвиденная ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example: { error: internal_error }
+
+  schemas:
+    User:
+      type: object
+      required: [id, name, tags]
+      properties:
+        id:
+          type: integer
+          examples: [1]
+        name:
+          type: string
+          examples: [alice]
+        tags:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+
+    AddUserRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Пробелы по краям обрезаются; пустое после обрезки имя отклоняется.
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+
+    AddUserResponse:
+      type: object
+      required: [status, id, name]
+      properties:
+        status:
+          type: string
+          const: created
+        id:
+          type: integer
+        name:
+          type: string
+
+    ActivateResponse:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: array
+          maxItems: 5
+          items:
+            type: integer
+
+    ScheduledResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: scheduled
+
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok
+
+    WrongResponse:
+      type: object
+      required: [msg, detail]
+      properties:
+        msg:
+          type: string
+          const: error
+        detail:
+          type: string
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Машиночитаемый код ошибки
+          enum: [validation_error, not_found, method_not_allowed, internal_error]
+        detail:
+          type: string
+          description: Пояснение для человека
