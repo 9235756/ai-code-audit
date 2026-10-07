@@ -1,0 +1,21 @@
+[project]
+name = "ai-code-audit"
+version = "1.0.0"
+description = "Flask user service: legacy code, audit and fixed version"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 90
+target-version = "py311"
+# legacy/ is intentionally broken and kept as the "before" snapshot.
+extend-exclude = ["legacy"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "B", "UP", "S", "SIM", "D"]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "D"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
