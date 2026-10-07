@@ -19,3 +19,4 @@ ignore = ["D203", "D213"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
