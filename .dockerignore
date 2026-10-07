@@ -1,0 +1,33 @@
+# VCS and CI
+.git
+.gitignore
+.github
+
+# Python artifacts
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+.venv
+venv
+env
+
+# Local data and secrets
+data
+*.db
+*.sqlite3
+passwords.txt
+.env
+
+# Not needed at runtime
+legacy
+tests
+scripts
+*.md
+openapi.yaml
+requirements-dev.txt
+pyproject.toml
+docker-compose.yml
+Dockerfile
+.dockerignore
+.DS_Store

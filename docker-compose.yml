@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    image: ai-code-audit
+    container_name: audit
+    ports:
+      - "8080:8080"
+    environment:
+      DB_PATH: /app/data/app.db
+    volumes:
+      - audit-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  audit-data:
+    name: audit-data
