@@ -148,8 +148,16 @@ class ActiveUsers:
 
 
 def heavy_computation(n: int) -> int:
-    """CPU-bound stand-in for a slow job: sum of ``0..n-1``."""
-    return sum(range(n))
+    """CPU-bound stand-in for a slow job: sum of ``0..n-1``.
+
+    A Python-level loop on purpose: ``sum(range(n))`` runs as one C call and
+    holds the GIL until it finishes, freezing request threads. The interpreter
+    switches threads between bytecodes, so this loop lets requests through.
+    """
+    total = 0
+    for i in range(n):
+        total += i
+    return total
 
 
 def schedule_heavy_computation(executor: ThreadPoolExecutor, n: int) -> Future[int]:
